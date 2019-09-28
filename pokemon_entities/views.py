@@ -75,21 +75,17 @@ def show_pokemon(request, pokemon_id):
         'img_url': img_url,
     }
     if requested_pokemon.next_evolution:
-        pokemon.update({
-            'next_evolution': {
+        pokemon['next_evolution'] = {
                 'title_ru': requested_pokemon.next_evolution.title,
                 'pokemon_id': requested_pokemon.next_evolution.id,
                 'img_url': get_image_url_or_default(request, requested_pokemon.next_evolution.image),
             }
-        })
     if requested_pokemon.previous_evolution:
-        pokemon.update({
-            'previous_evolution': {
+        pokemon['previous_evolution'] = {
                 'title_ru': requested_pokemon.previous_evolution.title,
                 'pokemon_id': requested_pokemon.previous_evolution.id,
                 'img_url': get_image_url_or_default(request, requested_pokemon.previous_evolution.image),
             }
-        })
 
     return render(request, 'pokemon.html', context={'map': folium_map._repr_html_(),
                                                     'pokemon': pokemon})
