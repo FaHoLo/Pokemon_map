@@ -24,13 +24,12 @@ def add_pokemon(folium_map, lat, lon, name, image_url=DEFAULT_IMAGE_URL):
 def get_image_url_or_default(request, path_to_search_image):
     try:
         img_url = request.build_absolute_uri(path_to_search_image.url)
-    except Exception:
+    except:
         img_url = DEFAULT_IMAGE_URL
     return img_url
 
 def show_all_pokemons(request):
     pokemon_entities = PokemonEntity.objects.all().select_related('pokemon')
-
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     for pokemon_entity in pokemon_entities:
         img_url = get_image_url_or_default(request, pokemon_entity.pokemon.image)
@@ -60,7 +59,7 @@ def show_pokemon(request, pokemon_id):
         return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
         
     img_url = get_image_url_or_default(request, requested_pokemon.image)
-    requested_pokemon_entities = PokemonEntity.objects.filter(pokemon=requested_pokemon)
+    requested_pokemon_entities = requested_pokemon.pokemon_entities.all()
     
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     for pokemon_entity in requested_pokemon_entities:
@@ -81,12 +80,15 @@ def show_pokemon(request, pokemon_id):
                 'pokemon_id': requested_pokemon.next_evolution.id,
                 'img_url': get_image_url_or_default(request, requested_pokemon.next_evolution.image),
         }
-    if requested_pokemon.previous_evolution:
+    try:
+        previous_evolution = requested_pokemon.previous_evolution.get()
         pokemon['previous_evolution'] = {
-                'title_ru': requested_pokemon.previous_evolution.title,
-                'pokemon_id': requested_pokemon.previous_evolution.id,
-                'img_url': get_image_url_or_default(request, requested_pokemon.previous_evolution.image),
+                'title_ru': previous_evolution.title,
+                'pokemon_id': previous_evolution.id,
+                'img_url': get_image_url_or_default(request, previous_evolution.image),
         }
+    except:
+        pass
 
     return render(request, 'pokemon.html', context={'map': folium_map._repr_html_(),
                                                     'pokemon': pokemon})
