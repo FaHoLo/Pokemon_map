@@ -54,8 +54,9 @@ def show_all_pokemons(request):
     })
 
 def show_pokemon(request, pokemon_id):
-    requested_pokemon = Pokemon.objects.get(id=int(pokemon_id))
-    if not requested_pokemon:
+    try:
+        requested_pokemon = Pokemon.objects.get(id=int(pokemon_id))
+    except:
         return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
         
     img_url = get_image_url_or_default(request, requested_pokemon.image)
