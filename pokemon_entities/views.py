@@ -3,6 +3,7 @@ import json
 
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from .models import PokemonEntity
 from .models import Pokemon
 
@@ -74,21 +75,23 @@ def show_pokemon(request, pokemon_id):
         'description': requested_pokemon.description,
         'img_url': img_url,
     }
-    if requested_pokemon.next_evolution:
-        pokemon['next_evolution'] = {
-                'title_ru': requested_pokemon.next_evolution.title,
-                'pokemon_id': requested_pokemon.next_evolution.id,
-                'img_url': get_image_url_or_default(request, requested_pokemon.next_evolution.image),
-        }
-    try:
-        previous_evolution = requested_pokemon.previous_evolution.get()
+    if requested_pokemon.previous_evolution:
         pokemon['previous_evolution'] = {
-                'title_ru': previous_evolution.title,
-                'pokemon_id': previous_evolution.id,
-                'img_url': get_image_url_or_default(request, previous_evolution.image),
+                'title_ru': requested_pokemon.previous_evolution.title,
+                'pokemon_id': requested_pokemon.previous_evolution.id,
+                'img_url': get_image_url_or_default(request, requested_pokemon.previous_evolution.image),
         }
-    except:
+    next_evolution = None
+    try:
+        next_evolution = requested_pokemon.next_evolutions.all()[0]
+    except IndexError:
         pass
+    if next_evolution:
+        pokemon['next_evolution'] = {
+                'title_ru': next_evolution.title,
+                'pokemon_id': next_evolution.id,
+                'img_url': get_image_url_or_default(request, next_evolution.image),
+        }
 
     return render(request, 'pokemon.html', context={'map': folium_map._repr_html_(),
                                                     'pokemon': pokemon})
