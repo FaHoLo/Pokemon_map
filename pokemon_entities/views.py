@@ -1,9 +1,7 @@
 import folium
-import json
 
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from .models import PokemonEntity
 from .models import Pokemon
 
@@ -22,12 +20,14 @@ def add_pokemon(folium_map, lat, lon, name, image_url=DEFAULT_IMAGE_URL):
         icon=icon,
     ).add_to(folium_map)
 
+
 def get_image_url_or_default(request, path_to_search_image):
     try:
         img_url = request.build_absolute_uri(path_to_search_image.url)
-    except:
+    except Exception:
         img_url = DEFAULT_IMAGE_URL
     return img_url
+
 
 def show_all_pokemons(request):
     pokemon_entities = PokemonEntity.objects.all().select_related('pokemon')
@@ -41,7 +41,7 @@ def show_all_pokemons(request):
     pokemons_on_page = []
     pokemons = Pokemon.objects.all()
     for pokemon in pokemons:
-        img_url  = get_image_url_or_default(request, pokemon.image)
+        img_url = get_image_url_or_default(request, pokemon.image)
         pokemons_on_page.append({
             'pokemon_id': pokemon.id,
             'img_url': img_url,
@@ -53,20 +53,21 @@ def show_all_pokemons(request):
         'pokemons': pokemons_on_page,
     })
 
+
 def show_pokemon(request, pokemon_id):
     try:
         requested_pokemon = Pokemon.objects.get(id=int(pokemon_id))
-    except:
+    except Exception:
         return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
-        
+
     img_url = get_image_url_or_default(request, requested_pokemon.image)
     requested_pokemon_entities = requested_pokemon.pokemon_entities.all()
-    
+
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     for pokemon_entity in requested_pokemon_entities:
         add_pokemon(
             folium_map, pokemon_entity.lat, pokemon_entity.lon,
-            requested_pokemon.title, img_url)  
+            requested_pokemon.title, img_url)
 
     pokemon = {
         'title_ru': requested_pokemon.title,
